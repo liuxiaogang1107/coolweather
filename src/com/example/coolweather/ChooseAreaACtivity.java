@@ -8,7 +8,10 @@ import com.example.coolweather.R;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
@@ -73,6 +76,16 @@ public class ChooseAreaACtivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
+		
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		if (prefs.getBoolean("city_selected", false)) {
+			Intent intent = new Intent(this,WeatherActivity.class);
+			startActivity(intent);
+			finish();
+			return;
+		}
+		
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.choose_area);
 		mContext = ChooseAreaACtivity.this;
@@ -100,6 +113,13 @@ public class ChooseAreaACtivity extends Activity {
 					selectedCity = cityList.get(position);
 					System.out.println(selectedCity.getCityName()+" 我点击了"+" "+selectedCity.getCityCode());
 					queryCounties();
+				}else if (currentLevel == LEVEL_COUNTY) {
+					String countyName = countyList.get(position).getCountyNanme();
+					System.out.println(countyList.get(position).getCountyNanme());
+					Intent intent = new Intent(mContext,WeatherActivity.class);
+					intent.putExtra("county_name", countyName);
+					startActivity(intent);
+					finish();
 				}
 			}
 		});
@@ -175,8 +195,6 @@ public class ChooseAreaACtivity extends Activity {
 			currentLevel = LEVEL_COUNTY;
 		}else{
 			queryFromServer(selectedCity.getCityCode(), "county");
-			System.out.println(selectedCity.getCityCode()+"市Code");
-			
 		}
 	}
 	
@@ -210,14 +228,8 @@ public class ChooseAreaACtivity extends Activity {
 				}else if ("county".equals(type)) {
 					
 					result = Utility.handleCountyResponse(coolWeatherDB, response, selectedCity.getId());
-					if (result) {
-						System.out.println("**全部县**"+response.toString());
-					}
-					
-				}else {
-					
-					System.out.println("没有匹配");
 				}
+					
 				
 				if (result) {
 					//通过runOnUiThread()方法回到主线程处理逻辑

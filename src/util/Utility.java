@@ -1,19 +1,26 @@
 package util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text. TextUtils;
 import model.City;
 import model.CoolWeatherDB;
 import model.County;
 import model.Province;
 
-/**
- * ½âÎö·şÎñ·µ»ØµÄÊı¾İ
- * */
+
 public class Utility {
 	
-	/**
-	 * ½âÎöºÍ´¦Àí·şÎñÆ÷·µ»ØµÄÊ¡¼¶Êı¾İ
-	 * */
+	
 	public synchronized static boolean handleProvinceResponse(CoolWeatherDB coolWeatherDB,String response){
 		if (!TextUtils.isEmpty(response)) {
 			String[] allProvinces = response.split(",");
@@ -27,7 +34,7 @@ public class Utility {
 					province.setProvinceCode(array[0]);
 					province.setProvinceName(array[1]);
 					
-					//½«½âÎö³öÀ´µÄÊı¾İ´æ´¢µ½Province
+					
 					coolWeatherDB.saveProvince(province);
 				}
 				return true;
@@ -36,9 +43,6 @@ public class Utility {
 		return false;
 	}
 	
-	/**
-	 * ½âÎöºÍ´¦Àí·şÎñÆ÷·µ»ØµÄÊĞ¼¶Êı¾İ
-	 * */
 	public static boolean handleCityResponse(CoolWeatherDB coolWeatherDB,String response,int provinceId){
 		if (!TextUtils.isEmpty(response)) {
 			String[] allCities = response.split(",");
@@ -53,7 +57,7 @@ public class Utility {
 					city.setCityName(array[1]);
 					city.setProvinceId(provinceId);
 					
-					//½«½âÎö³öÀ´µÄÊı¾İ´æ´¢µ½City±íÖĞ
+					
 					coolWeatherDB.saveCity(city);
 				}
 				return true;
@@ -62,9 +66,7 @@ public class Utility {
 		return false;
 	}
 	
-	/**
-	 * ½âÎöºÍ´¦Àí·şÎñÆ÷·µ»ØµÄÏØ¼¶Êı¾İ
-	 * */
+	
 	public static boolean handleCountyResponse(CoolWeatherDB coolWeatherDB,String response,int cityId){
 		if (!TextUtils.isEmpty(response)) {
 			String[] allCounties = response.split(",");
@@ -79,12 +81,55 @@ public class Utility {
 					county.setCountyName(array[1]);
 					county.setCityId(cityId);
 					
-					//½«½âÎö³öÀ´µÄÊı¾İ´æ´¢µ½County±íÖĞ
+				
 					coolWeatherDB.saveCounty(county);
 				}
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	
+	public static void handWeatherResponse(Context context, String response){
+		
+		try {
+			JSONObject jsonObject = new JSONObject(response);
+			JSONObject weatherInfo = jsonObject.getJSONObject("result");
+			JSONObject jsonObject2 = weatherInfo.getJSONObject("data");
+			JSONObject jsonObject3 = jsonObject2.getJSONObject("realtime");
+			
+			String cityName = jsonObject3.getString("city_name");
+			String weatherCode = jsonObject3.getString("city_code");
+			//è·å–ç™½å¤©å¤œæ™šçš„æ¸©åº¦
+			JSONObject jsonObject4 = jsonObject3.getJSONObject("weather");
+			
+			String temp1 = jsonObject4.getString("temperature");
+			
+			String weatherDesp = jsonObject4.getString("info");
+			String publishTime = jsonObject3.getString("time");
+			
+			saveWeatherInfo(context, cityName, weatherCode, temp1, weatherDesp, publishTime);
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	public static void saveWeatherInfo(Context context, String cityName, String weatherCode, String temp1, String weatherDesp, String publishTime){
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyå¹´Mæœˆdæ—¥", Locale.CHINA);
+		
+		SharedPreferences.Editor editor = PreferenceManager
+				.getDefaultSharedPreferences(context).edit();
+//			editor.putBoolean("city_selected", true);
+			editor.putString("weather_code", weatherCode);
+			editor.putString("temp1", temp1);
+			editor.putString("city_name", cityName);
+			editor.putString("weather_desp", weatherDesp);
+			editor.putString("publish_time", publishTime);
+			editor.putString("current_data", sdf.format(new Date()));
+			editor.commit();
 	}
 }
