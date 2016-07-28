@@ -1,5 +1,7 @@
 package com.example.coolweather;
 
+import com.example.coolweather.service.AutoUpdateService;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -159,6 +161,11 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		//显示布局
 		weatherInfoLayout.setVisibility(View.VISIBLE);
 		cityNameText.setVisibility(View.VISIBLE);
+		
+		//加入定时更新
+		
+		Intent intent = new Intent(WeatherActivity.this,AutoUpdateService.class);
+		startService(intent);
 	}
 
 
